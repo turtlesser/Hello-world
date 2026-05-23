@@ -1,0 +1,37 @@
+// Google Apps Script 後台程式
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheets()[0];
+  var rows = sheet.getDataRange().getValues();
+  
+  var records = [];
+  // 從第二行開始讀取數據（跳過標題）
+  for (var i = 1; i < rows.length; i++) {
+    records.push({
+      day: rows[i][0],
+      time: rows[i][1],
+      useFor: rows[i][2],
+      amount: rows[i][3]
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(records))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheets()[0];
+    
+    // 將新紀錄寫入試算表最後一行
+    sheet.appendRow([data.day, data.time, data.useFor, data.amount]);
+    
+    return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
